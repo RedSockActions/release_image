@@ -1,0 +1,68 @@
+name: "RedSock/Releaser"
+description: "Creates Docker image and pushes it to Dockerhub or Private registry"
+
+author: "RedSock"
+
+branding:
+  icon: "git-pull-request"
+  color: "red"
+
+inputs:
+  private-registry:
+    description: "URL Name of private Docker registry to push to"
+    default: "hub.docker.com"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.ref }}
+
+    - name: Set up Docker BuildX
+      uses: docker/setup-buildx-action@v3
+
+    - name: Define owner name
+      uses: ASzc/change-string-case-action@v5
+      id: owner_name
+      with:
+        string: ${{ github.repository_owner }}
+
+    - name: Define repo name
+      uses: ASzc/change-string-case-action@v5
+      id: repo_name
+      with:
+        string: ${{ github.event.repository.name }}
+
+    - name: Set output
+      id: tag_short
+      shell: bash
+      run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+
+    - name: Define version tag
+      uses: ASzc/change-string-case-action@v5
+      id: tag
+      with:
+        string: ${{ steps.tag_short.outputs.tag }}
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ inputs.private-registry }}
+        username: ${{ secrets.REGISTRY_USER }}
+        password: ${{ secrets.REGISTRY_PWD }}
+
+    - name: Build image to dockerhub
+      shell: bash
+      env:
+        IMAGE_NAME: ${{ steps.owner_name.outputs.lowercase }}/${{ steps.repo_name.outputs.lowercase }}
+        IMAGE_VERSION: ${{ steps.tag.outputs.lowercase }}
+      run: |
+        docker build \
+        -t $IMAGE_NAME:$IMAGE_VERSION \
+        -t $IMAGE_NAME:latest .
+        
+        docker tag $IMAGE_NAME:$IMAGE_VERSION 
+        docker push $IMAGE_NAME:$IMAGE_VERSION
+        docker push $IMAGE_NAME:latest
