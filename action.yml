@@ -11,6 +11,12 @@ inputs:
   private-registry:
     description: "URL Name of private Docker registry to push to"
     default: "hub.docker.com"
+  REGISTRY_USER:
+    description: "Registry user"
+    required: true
+  REGISTRY_PWD:
+    description: "Registry tag"
+    required: true
 
 runs:
   using: "composite"
@@ -50,8 +56,8 @@ runs:
       uses: docker/login-action@v3
       with:
         registry: ${{ inputs.private-registry }}
-        username: ${{ secrets.REGISTRY_USER }}
-        password: ${{ secrets.REGISTRY_PWD }}
+        username: ${{ inputs.REGISTRY_USER }}
+        password: ${{ inputs.REGISTRY_PWD }}
 
     - name: Build image to dockerhub
       shell: bash
