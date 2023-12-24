@@ -10,7 +10,7 @@ branding:
 inputs:
   REGISTRY_URL:
     description: "URL Name of private Docker registry to push to"
-    default: "ghcr.io"
+    default: "docker.io"
   REGISTRY_USER:
     description: "Registry user"
     required: true
