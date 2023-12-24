@@ -11,9 +11,7 @@ inputs:
   private-registry:
     description: "URL Name of private Docker registry to push to"
     default: "hub.docker.com"
-outputs:
-  new_tag:
-    description: "Empty if no new tag has been released"
+
 runs:
   using: "composite"
   steps:
