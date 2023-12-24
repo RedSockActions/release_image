@@ -63,6 +63,5 @@ runs:
         -t $IMAGE_NAME:$IMAGE_VERSION \
         -t $IMAGE_NAME:latest .
         
-        docker tag $IMAGE_NAME:$IMAGE_VERSION 
         docker push $IMAGE_NAME:$IMAGE_VERSION
         docker push $IMAGE_NAME:latest
