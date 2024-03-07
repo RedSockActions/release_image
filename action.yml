@@ -48,22 +48,20 @@ runs:
     - name: Build image to dockerhub
       shell: bash
       run: |
-        IMAGE_NAME=${{ github.event.repository.name }}
-        IMAGE_NAME=$(echo $IMAGE_NAME | tr '[A-Z]' '[a-z]')
         
-        IMAGE_ID=${{ inputs.REGISTRY_USER }}/$IMAGE_NAME
-        IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+        IMAGE_ID=$(echo ${{ inputs.REGISTRY_USER }}/${{ github.event.repository.name }} | tr '[A-Z]' '[a-z]')
         
         VERSION=$(echo "${{ steps.git_tag.outputs.tag }}" | sed -e 's,.*/\(.*\),\1,')
         
         echo IMAGE_ID=$IMAGE_ID
         echo VERSION=$VERSION
-        docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+        
+        docker tag $IMAGE_ID:$VERSION
         docker push $IMAGE_ID:$VERSION
         
         docker build \
-        -t $IMAGE_NAME:$IMAGE_VERSION \
-        -t $IMAGE_NAME:latest .
+        -t $IMAGE_ID:$IMAGE_VERSION \
+        -t $IMAGE_ID:latest .
         
-        docker push $IMAGE_NAME:$IMAGE_VERSION
-        docker push $IMAGE_NAME:latest
+        docker push $IMAGE_ID:$IMAGE_VERSION
+        docker push $IMAGE_ID:latest
