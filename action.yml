@@ -49,8 +49,9 @@ runs:
       shell: bash
       run: |
         IMAGE_NAME=${{ github.event.repository.name }}
-        IMAGE_ID=${{ inputs.REGISTRY_USER }}/$IMAGE_NAME
+        IMAGE_NAME=$(echo IMAGE_NAME | tr '[A-Z]' '[a-z]')
         
+        IMAGE_ID=${{ inputs.REGISTRY_USER }}/$IMAGE_NAME
         IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
         
         VERSION=$(echo "${{ steps.git_tag.outputs.tag }}" | sed -e 's,.*/\(.*\),\1,')
