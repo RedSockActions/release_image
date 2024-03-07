@@ -30,12 +30,6 @@ runs:
     - name: Set up Docker BuildX
       uses: docker/setup-buildx-action@v3
 
-    - name: Define repo name
-      uses: ASzc/change-string-case-action@v5
-      id: repo_name
-      with:
-        string: ${{ github.event.repository.name }}
-
     - name: Get Latest Tag
       uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
       id: git_tag
@@ -49,10 +43,18 @@ runs:
 
     - name: Build image to dockerhub
       shell: bash
-      env:
-        IMAGE_NAME: ${{ inputs.REGISTRY_USER }}/${{ steps.repo_name.outputs.lowercase }}
-        IMAGE_VERSION: ${{ steps.git_tag.outputs.tag }}
       run: |
+        IMAGE_ID=${{ inputs.REGISTRY_USER }}/$IMAGE_NAME
+        
+        IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+        
+        VERSION=$(echo "${{ steps.git_tag.outputs.tag }}" | sed -e 's,.*/\(.*\),\1,')
+        
+        echo IMAGE_ID=$IMAGE_ID
+        echo VERSION=$VERSION
+        docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+        docker push $IMAGE_ID:$VERSION
+        
         docker build \
         -t $IMAGE_NAME:$IMAGE_VERSION \
         -t $IMAGE_NAME:latest .
