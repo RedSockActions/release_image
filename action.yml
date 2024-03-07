@@ -56,9 +56,6 @@ runs:
         echo IMAGE_ID=$IMAGE_ID
         echo VERSION=$VERSION
         
-        docker tag $IMAGE_ID:$VERSION
-        docker push $IMAGE_ID:$VERSION
-        
         docker build \
         -t $IMAGE_ID:$IMAGE_VERSION \
         -t $IMAGE_ID:latest .
