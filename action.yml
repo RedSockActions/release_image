@@ -17,6 +17,10 @@ inputs:
   REGISTRY_PWD:
     description: "Registry tag"
     required: true
+outputs:
+  page_url:
+    value:
+    description: 'URL to deployed GitHub Pages'
 
 runs:
   using: "composite"
@@ -44,6 +48,7 @@ runs:
     - name: Build image to dockerhub
       shell: bash
       run: |
+        IMAGE_NAME=${{ github.event.repository.name }}
         IMAGE_ID=${{ inputs.REGISTRY_USER }}/$IMAGE_NAME
         
         IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
