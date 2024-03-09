@@ -57,7 +57,4 @@ runs:
         docker buildx build \
           --platform ${{inputs.PLATFORMS}} \
           -t $IMAGE_ID:$VERSION \
-          -t $IMAGE_ID:latest .
-        
-        docker push $IMAGE_ID:$VERSION
-        docker push $IMAGE_ID:latest
+          -t $IMAGE_ID:latest --push . 
