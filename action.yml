@@ -49,7 +49,7 @@ runs:
     - name: Build image to dockerhub
       shell: bash
       run: |
-        IMAGE_ID=$(echo ${{IMAGE_NAME}})
+        IMAGE_ID=$(echo ${{ inputs.IMAGE_NAME }})
         
         if [[-z "$IMAGE_ID"]]; then 
           IMAGE_ID=$(echo ${{ inputs.REGISTRY_USER }}/${{ github.event.repository.name }} | tr '[A-Z]' '[a-z]')
