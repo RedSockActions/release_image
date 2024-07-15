@@ -51,7 +51,7 @@ runs:
       run: |
         IMAGE_ID=$(echo ${{ inputs.IMAGE_NAME }})
         
-        if [[-z "$IMAGE_ID"]]; then 
+        if [ -z "$IMAGE_ID" ]; then 
           IMAGE_ID=$(echo ${{ inputs.REGISTRY_USER }}/${{ github.event.repository.name }} | tr '[A-Z]' '[a-z]')
         fi
         
