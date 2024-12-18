@@ -23,6 +23,7 @@ inputs:
   IMAGE_NAME:
     description: "Final image name"
     default: ""
+
 runs:
   using: "composite"
   steps:
@@ -64,3 +65,5 @@ runs:
           --platform ${{ inputs.PLATFORMS }} \
           -t $IMAGE_ID:$VERSION \
           -t $IMAGE_ID:latest --push .
+        
+        echo "Docker image successfully built" >> $GITHUB_STEP_SUMMARY
