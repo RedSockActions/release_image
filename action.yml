@@ -23,12 +23,16 @@ inputs:
   IMAGE_NAME:
     description: "Final image name"
     default: ""
-
+  DISABLE_CHECKOUT:
+    description: "Disables checkout on start"
+    default: "false"
+    type: boolean
 runs:
   using: "composite"
   steps:
     - name: Checkout
       uses: actions/checkout@v4
+      if: ${{ inputs.DISABLE_CHECKOUT == 'false' }}
       with:
         ref: ${{ github.ref }}
         fetch-depth: 0
