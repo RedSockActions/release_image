@@ -67,16 +67,16 @@ runs:
         echo IMAGE_ID=$IMAGE_ID
         echo VERSION=$VERSION
         
-        if [ "${{ inputs.DRYRUN == 'true' }}" ]; then 
-          docker buildx build \
-            --platform linux/amd64 \
-            -t $IMAGE_ID:$VERSION \
-            -t $IMAGE_ID:latest --load .
-        else
-          docker buildx build \
+        BUILD_FLAGS=""
+        
+        if [ "${{ inputs.DRYRUN != 'true' }}" ]; then 
+          BUILD_FLAGS="--push"
+        fi
+        
+        docker buildx build \
             --platform ${{ inputs.PLATFORMS }} \
             -t $IMAGE_ID:$VERSION \
-            -t $IMAGE_ID:latest --push .
-        fi
+            -t $IMAGE_ID:latest \
+            $BUILD_FLAGS  .
         
         echo "Docker image successfully built" >> $GITHUB_STEP_SUMMARY
