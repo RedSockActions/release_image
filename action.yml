@@ -8,12 +8,9 @@ branding:
   color: "red"
 
 inputs:
-  REGISTRY_URL:
-    description: "URL of the Docker registry to push to"
-    default: "docker.io"
   REGISTRY_USER:
     description: "Registry user"
-    default: ""
+    default: "redsock"
   REGISTRY_PWD:
     description: "Registry password or token"
     default: ""
@@ -45,6 +42,7 @@ runs:
 
     - name: Set up Docker BuildX
       uses: docker/setup-buildx-action@v3
+      if:  ${{ inputs.REGISTRY_PWD != '' }}
 
     - name: Get Latest Tag
       uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
