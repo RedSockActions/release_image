@@ -8,14 +8,17 @@ branding:
   color: "red"
 
 inputs:
+  REGISTRY_URL:
+    description: "URL Name of private Docker registry to push to"
+    default: "docker.io"
   REGISTRY_USER:
     description: "Registry user"
-    default: "redsock"
+    required: true
   REGISTRY_PWD:
-    description: "Registry password or token"
-    default: ""
+    description: "Registry tag"
+    required: true
   PLATFORMS:
-    description: "Platforms to build for"
+    description: "Platforms to build to"
     default: "linux/amd64,linux/arm64"
   IMAGE_NAME:
     description: "Final image name"
@@ -23,13 +26,9 @@ inputs:
   DISABLE_CHECKOUT:
     description: "Disables checkout on start"
     default: "false"
-  OUTPUT:
-    description: "Comma-separated outputs like registry:<url>,file:<path>"
-    default: "registry:docker.io"
-  PREBUILT_IMAGE_PATH:
-    description: "Path to a Docker image tar file to load and push"
-    default: ""
-
+  DRYRUN:
+    description: "Builds but doesn't push image to registry"
+    default: "false"
 runs:
   using: "composite"
   steps:
@@ -42,77 +41,42 @@ runs:
 
     - name: Set up Docker BuildX
       uses: docker/setup-buildx-action@v3
-      if:  ${{ inputs.REGISTRY_PWD != '' }}
 
     - name: Get Latest Tag
       uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
       id: git_tag
 
-    - name: Parse OUTPUT inputs
-      id: parse_output
-      shell: python
-      run: |
-        import os
-        
-        output_param = os.getenv("INPUT_OUTPUT", "")
-        entries = [o.strip() for o in output_param.split(",") if o.strip()]
-        
-        reg_urls = []
-        file_path = '.'
-        
-        for entry in entries:
-            if entry.startswith("registry:"):
-                reg_urls.append(entry.split(":", 1)[1])
-            elif entry.startswith("file:"):
-                file_path = entry.split(":", 1)[1]
-        
-        with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
-            fh.write(f"registry_urls={'::'.join(reg_urls)}\n")
-            fh.write(f"file_path={file_path}\n")
-
-    - name: Login to Docker Registry
-      if: ${{ steps.parse_output.outputs.registry_urls != '' }}
+    - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         registry: ${{ inputs.REGISTRY_URL }}
         username: ${{ inputs.REGISTRY_USER }}
         password: ${{ inputs.REGISTRY_PWD }}
 
-    - name: Build image
+    - name: Build image to dockerhub
       shell: bash
       run: |
-        IMAGE_ID="${{ inputs.IMAGE_NAME }}"
-        [ -z "$IMAGE_ID" ] && IMAGE_ID="${{ inputs.REGISTRY_USER }}/${{ github.event.repository.name }}"
-        IMAGE_ID=$(echo "$IMAGE_ID" | tr '[:upper:]' '[:lower:]')
+        IMAGE_ID=$(echo ${{ inputs.IMAGE_NAME }})
+        
+        if [ -z "$IMAGE_ID" ]; then 
+          IMAGE_ID=$(echo ${{ inputs.REGISTRY_USER }}/${{ github.event.repository.name }} | tr '[A-Z]' '[a-z]')
+        fi
         
         VERSION=$(echo "${{ steps.git_tag.outputs.tag }}" | sed -e 's,.*/\(.*\),\1,')
-        echo "IMAGE_ID=$IMAGE_ID"
-        echo "VERSION=$VERSION"
         
-        TAGS="-t $IMAGE_ID:$VERSION -t $IMAGE_ID:latest"
+        echo IMAGE_ID=$IMAGE_ID
+        echo VERSION=$VERSION
         
-        if [ -n "${{ inputs.PREBUILT_IMAGE_PATH }}" ]; then
-          echo "Using prebuilt image from: ${{ inputs.PREBUILT_IMAGE_PATH }}"
-          docker load -i "${{ inputs.PREBUILT_IMAGE_PATH }}"
+        if [ "${{ inputs.DRYRUN == 'true' }}" ]; then 
+          docker buildx build \
+            --platform ${{ inputs.PLATFORMS }} \
+            -t $IMAGE_ID:$VERSION \
+            -t $IMAGE_ID:latest --load .
         else
-          echo "Building image using buildx..."
-          docker buildx build --platform "${{ inputs.PLATFORMS }}" $TAGS --load .
+          docker buildx build \
+            --platform ${{ inputs.PLATFORMS }} \
+            -t $IMAGE_ID:$VERSION \
+            -t $IMAGE_ID:latest --push .
         fi
         
-        # Save the image to a tar file if file output is defined and it's not prebuilt
-        if [ -z "${{ inputs.PREBUILT_IMAGE_PATH }}" ] && [ "${{ steps.parse_output.outputs.file_path }}" != "" ]; then
-          FILE_PATH="${{ steps.parse_output.outputs.file_path }}"
-          FILE_NAME="$(echo "$IMAGE_ID" | tr '/:' '_')-$VERSION.tar"
-          mkdir -p "$FILE_PATH"
-          docker save "$IMAGE_ID:$VERSION" -o "$FILE_PATH/$FILE_NAME"
-          echo "Docker image saved to $FILE_PATH/$FILE_NAME"
-        fi
-        
-        # Push to registry if registry output is defined
-        if [ "${{ steps.parse_output.outputs.registry_urls }}" != "" ]; then
-          echo "Pushing image to registry..."
-          docker push "$IMAGE_ID:$VERSION"
-          echo "Docker image pushed to registry"
-        fi
-        
-        echo "Docker image processing completed" >> $GITHUB_STEP_SUMMARY
+        echo "Docker image successfully built" >> $GITHUB_STEP_SUMMARY
