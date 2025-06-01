@@ -78,9 +78,3 @@ runs:
             -t $IMAGE_ID:$VERSION \
             -t $IMAGE_ID:latest \
             $BUILD_FLAGS  .
-        
-        if [ "${{ inputs.DRYRUN != 'true' }}" ]; then 
-          IMAGE_URL="${{inputs.REGISTRY_URL}}/$IMAGE_ID"
-          echo "image_url=$IMAGE_URL" >> $GITHUB_STEP_SUMMARY
-        fi
-       
