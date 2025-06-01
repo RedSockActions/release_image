@@ -13,10 +13,10 @@ inputs:
     default: "docker.io"
   REGISTRY_USER:
     description: "Registry user"
-    required: true
+    default: ""
   REGISTRY_PWD:
     description: "Registry password or token"
-    required: true
+    default: ""
   PLATFORMS:
     description: "Platforms to build for"
     default: "linux/amd64,linux/arm64"
@@ -31,7 +31,6 @@ inputs:
     default: "registry:docker.io"
   PREBUILT_IMAGE_PATH:
     description: "Path to a Docker image tar file to load and push"
-    required: false
     default: ""
 
 runs:
