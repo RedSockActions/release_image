@@ -79,4 +79,8 @@ runs:
             -t $IMAGE_ID:latest \
             $BUILD_FLAGS  .
         
-        echo "Docker image successfully built" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ inputs.DRYRUN != 'true' }}" ]; then 
+          IMAGE_URL="${{inputs.REGISTRY_URL}}/$IMAGE_ID"
+          echo "image_url=$IMAGE_URL" >> $GITHUB_STEP_SUMMARY
+        fi
+       
