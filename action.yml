@@ -69,7 +69,7 @@ runs:
         
         if [ "${{ inputs.DRYRUN == 'true' }}" ]; then 
           docker buildx build \
-            --platform ${{ inputs.PLATFORMS }} \
+            --platform linux/amd64 \
             -t $IMAGE_ID:$VERSION \
             -t $IMAGE_ID:latest --load .
         else
