@@ -34,7 +34,7 @@ runs:
   steps:
     - name: Checkout
       uses: actions/checkout@v4
-      if: ${{ inputs.DISABLE_CHECKOUT == 'false' }}
+      if: ${{ inputs.DISABLE_CHECKOUT != 'true' }}
       with:
         ref: ${{ github.ref }}
         fetch-depth: 0
@@ -69,12 +69,18 @@ runs:
         
         BUILD_FLAGS=""
         
-        if [ "${{ inputs.DRYRUN != 'true' }}" ]; then 
+        if [ "${{ inputs.DRYRUN == 'true' }}" ]; then 
+          BUILD_FLAGS="--load"
+        else 
           BUILD_FLAGS="--push"
         fi
         
         docker buildx build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new \
             --platform ${{ inputs.PLATFORMS }} \
+            --target builder \
             -t $IMAGE_ID:$VERSION \
             -t $IMAGE_ID:latest \
             $BUILD_FLAGS  .
+
