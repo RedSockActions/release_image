@@ -71,7 +71,7 @@ runs:
         PLATFORM_FLAGS=""
         TARGET_FLAG=""
         
-        if [ "$DRYRUN" = "true" ]; then 
+        if [ "${{ inputs.DRYRUN }}" = "true" ]; then 
           BUILD_FLAGS="--load"
           PLATFORM_FLAGS="--platform linux/amd64"
           TARGET_FLAG="--target builder"
