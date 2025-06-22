@@ -71,20 +71,23 @@ runs:
         PLATFORM_FLAGS=""
         TARGET_FLAG=""
         
-        if [ "${{ inputs.DRYRUN == 'true' }}" ]; then 
+        if [ "$DRYRUN" = "true" ]; then 
           BUILD_FLAGS="--load"
-          PLATFORM_FLAGS="linux/amd64"
+          PLATFORM_FLAGS="--platform linux/amd64"
           TARGET_FLAG="--target builder"
-        else 
+        else
           BUILD_FLAGS="--push"
-          PLATFORM_FLAGS="${{ inputs.PLATFORMS }}"
+          PLATFORM_FLAGS="--platform ${{ inputs.PLATFORMS }}"
+          TARGET_FLAG=""
         fi
         
         docker buildx build \
-            --cache-from=type=local,src=/tmp/.buildx-cache \
-            --cache-to=type=local,dest=/tmp/.buildx-cache-new \
-            --platform $PLATFORM_FLAGS $TARGET_FLAG \
-            -t $IMAGE_ID:$VERSION \
-            -t $IMAGE_ID:latest \
-            $BUILD_FLAGS  .
+          --cache-from=type=local,src=/tmp/.buildx-cache \
+          --cache-to=type=local,dest=/tmp/.buildx-cache-new \
+          $PLATFORM_FLAGS \
+          $TARGET_FLAG \
+          -t "$IMAGE_ID:$VERSION" \
+          -t "$IMAGE_ID:latest" \
+          $BUILD_FLAGS \
+          .
 
