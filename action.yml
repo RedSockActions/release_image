@@ -64,6 +64,10 @@ runs:
         
         VERSION=$(echo "${{ steps.git_tag.outputs.tag }}" | sed -e 's,.*/\(.*\),\1,')
         
+        if [ -z "VERSION" ]; then 
+          IMAGE_ID=${{ github.ref }}
+        fi
+        
         echo IMAGE_ID=$IMAGE_ID
         echo VERSION=$VERSION
         
