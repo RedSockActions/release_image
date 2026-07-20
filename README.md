@@ -52,4 +52,25 @@ Obligatory value
 
 Defines password (token) for user who pushes image
 
+### DOCKERFILE
+Optional value
+
+Path to the Dockerfile to build. Defaults to `Dockerfile`. Use this to build an
+alternate image (e.g. `Dockerfile.omnibus`) from the same repo in a separate job.
+
+### TAG_LATEST
+Optional value
+
+Defaults to `true`. Set to `false` to push only the `:$VERSION` tag and skip
+`:latest` — useful when `latest` should be promoted separately (e.g. behind a
+manual approval), see `RedSockActions/promote_tag`.
+
+### TAG_SUFFIX
+Optional value
+
+Appended to both the version tag and the latest tag (e.g. `-omnibus`), so a
+variant image built from a different Dockerfile can be stored as
+`$IMAGE_NAME:$VERSION-omnibus` / `$IMAGE_NAME:latest-omnibus` in the same
+repository instead of needing a separate `IMAGE_NAME`.
+
 ###### Made by RedSock with love for coding 

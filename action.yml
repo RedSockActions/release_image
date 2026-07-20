@@ -29,6 +29,15 @@ inputs:
   DRYRUN:
     description: "Builds but doesn't push image to registry"
     default: "false"
+  DOCKERFILE:
+    description: "Path to the Dockerfile to build"
+    default: "Dockerfile"
+  TAG_LATEST:
+    description: "Also tag and push the image as :latest"
+    default: "true"
+  TAG_SUFFIX:
+    description: "Suffix appended to both the version and latest tags (e.g. '-omnibus' to store a variant image in the same repo)"
+    default: ""
 runs:
   using: "composite"
   steps:
@@ -77,8 +86,15 @@ runs:
         BUILD_FLAGS=""
         PLATFORM_FLAGS=""
         TARGET_FLAG=""
-        
-        if [ "${{ inputs.DRYRUN }}" = "true" ]; then 
+
+        TAG_SUFFIX="${{ inputs.TAG_SUFFIX }}"
+
+        LATEST_TAG_ARGS=()
+        if [ "${{ inputs.TAG_LATEST }}" = "true" ]; then
+          LATEST_TAG_ARGS=(-t "$IMAGE_ID:latest$TAG_SUFFIX")
+        fi
+
+        if [ "${{ inputs.DRYRUN }}" = "true" ]; then
           BUILD_FLAGS="--load"
           PLATFORM_FLAGS="--platform linux/amd64"
           TARGET_FLAG="--target builder"
@@ -87,14 +103,15 @@ runs:
           PLATFORM_FLAGS="--platform ${{ inputs.PLATFORMS }}"
           TARGET_FLAG=""
         fi
-        
+
         docker buildx build \
           --cache-from=type=local,src=/tmp/.buildx-cache \
           --cache-to=type=local,dest=/tmp/.buildx-cache-new \
+          -f "${{ inputs.DOCKERFILE }}" \
           $PLATFORM_FLAGS \
           $TARGET_FLAG \
-          -t "$IMAGE_ID:$VERSION" \
-          -t "$IMAGE_ID:latest" \
+          -t "$IMAGE_ID:$VERSION$TAG_SUFFIX" \
+          "${LATEST_TAG_ARGS[@]}" \
           $BUILD_FLAGS \
           .
 
