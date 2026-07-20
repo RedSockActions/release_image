@@ -38,6 +38,9 @@ inputs:
   TAG_SUFFIX:
     description: "Suffix appended to both the version and latest tags (e.g. '-omnibus' to store a variant image in the same repo)"
     default: ""
+  MODE:
+    description: "'build' builds and pushes an image. 'promote' skips the build and copies the already-pushed :$VERSION$TAG_SUFFIX manifest to :latest$TAG_SUFFIX via 'docker buildx imagetools create' -- no rebuild, no checkout needed"
+    default: "build"
 runs:
   using: "composite"
   steps:
@@ -49,6 +52,7 @@ runs:
         fetch-depth: 0
 
     - name: Set up QEMU
+      if: ${{ inputs.MODE != 'promote' }}
       uses: docker/setup-qemu-action@v4
 
     - name: Set up Docker BuildX
@@ -69,25 +73,33 @@ runs:
       shell: bash
       run: |
         IMAGE_ID=$(echo ${{ inputs.IMAGE_NAME }})
-        
-        if [ -z "$IMAGE_ID" ]; then 
+
+        if [ -z "$IMAGE_ID" ]; then
           IMAGE_ID=$(echo ${{ inputs.REGISTRY_USER }}/${{ github.event.repository.name }} | tr '[A-Z]' '[a-z]')
         fi
-        
+
         VERSION=$(echo "${{ steps.git_tag.outputs.tag }}" | sed -e 's,.*/\(.*\),\1,')
-        
-        if [ -z "$VERSION" ]; then 
+
+        if [ -z "$VERSION" ]; then
           VERSION="${{ github.sha }}"
         fi
-        
+
         echo IMAGE_ID=$IMAGE_ID
         echo VERSION=$VERSION
-        
+
+        TAG_SUFFIX="${{ inputs.TAG_SUFFIX }}"
+
+        if [ "${{ inputs.MODE }}" = "promote" ]; then
+          echo "Promoting $IMAGE_ID:$VERSION$TAG_SUFFIX -> $IMAGE_ID:latest$TAG_SUFFIX"
+          docker buildx imagetools create \
+            --tag "$IMAGE_ID:latest$TAG_SUFFIX" \
+            "$IMAGE_ID:$VERSION$TAG_SUFFIX"
+          exit 0
+        fi
+
         BUILD_FLAGS=""
         PLATFORM_FLAGS=""
         TARGET_FLAG=""
-
-        TAG_SUFFIX="${{ inputs.TAG_SUFFIX }}"
 
         LATEST_TAG_ARGS=()
         if [ "${{ inputs.TAG_LATEST }}" = "true" ]; then

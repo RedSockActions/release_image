@@ -73,4 +73,34 @@ variant image built from a different Dockerfile can be stored as
 `$IMAGE_NAME:$VERSION-omnibus` / `$IMAGE_NAME:latest-omnibus` in the same
 repository instead of needing a separate `IMAGE_NAME`.
 
+### MODE
+Optional value
+
+Defaults to `build`. Set to `promote` to skip the build entirely and instead
+copy the already-pushed `:$VERSION$TAG_SUFFIX` manifest to
+`:latest$TAG_SUFFIX` via `docker buildx imagetools create` — no checkout, no
+rebuild, works for multi-arch manifests as-is. Useful behind a manual
+approval gate (e.g. a GitHub Environment with required reviewers) so
+`:latest` only moves once a human confirms the release:
+
+```yaml
+promote-latest:
+  needs: [docker-registry-release]
+  environment: promote-latest
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.ref }}
+        fetch-depth: 0
+
+    - uses: RedSockActions/release_image@v1
+      with:
+        MODE: promote
+        DISABLE_CHECKOUT: true
+        REGISTRY_USER: redsockruf
+        REGISTRY_PWD: ${{ secrets.REGISTRY_PWD }}
+        IMAGE_NAME: ${{ vars.IMAGE_NAME }}
+```
+
 ###### Made by RedSock with love for coding 
