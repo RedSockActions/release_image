@@ -38,6 +38,9 @@ inputs:
   TAG_SUFFIX:
     description: "Suffix appended to both the version and latest tags (e.g. '-omnibus' to store a variant image in the same repo)"
     default: ""
+  BUILD_ARGS:
+    description: "Docker build args, one KEY=VALUE per line, passed as --build-arg (ignored when MODE is promote)"
+    default: ""
   MODE:
     description: "'build' builds and pushes an image. 'promote' skips the build and copies the already-pushed :$VERSION$TAG_SUFFIX manifest to :latest$TAG_SUFFIX via 'docker buildx imagetools create' -- no rebuild, no checkout needed"
     default: "build"
@@ -71,6 +74,8 @@ runs:
 
     - name: Build image to dockerhub
       shell: bash
+      env:
+        BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
       run: |
         IMAGE_ID=$(echo ${{ inputs.IMAGE_NAME }})
 
@@ -101,6 +106,13 @@ runs:
         PLATFORM_FLAGS=""
         TARGET_FLAG=""
 
+        BUILD_ARG_FLAGS=()
+        while IFS= read -r BUILD_ARG; do
+          if [ -n "$BUILD_ARG" ]; then
+            BUILD_ARG_FLAGS+=(--build-arg "$BUILD_ARG")
+          fi
+        done <<< "$BUILD_ARGS"
+
         LATEST_TAG_ARGS=()
         if [ "${{ inputs.TAG_LATEST }}" = "true" ]; then
           LATEST_TAG_ARGS=(-t "$IMAGE_ID:latest$TAG_SUFFIX")
@@ -120,6 +132,7 @@ runs:
           --cache-from=type=local,src=/tmp/.buildx-cache \
           --cache-to=type=local,dest=/tmp/.buildx-cache-new \
           -f "${{ inputs.DOCKERFILE }}" \
+          "${BUILD_ARG_FLAGS[@]}" \
           $PLATFORM_FLAGS \
           $TARGET_FLAG \
           -t "$IMAGE_ID:$VERSION$TAG_SUFFIX" \

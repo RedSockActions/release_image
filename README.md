@@ -73,6 +73,13 @@ variant image built from a different Dockerfile can be stored as
 `$IMAGE_NAME:$VERSION-omnibus` / `$IMAGE_NAME:latest-omnibus` in the same
 repository instead of needing a separate `IMAGE_NAME`.
 
+### BUILD_ARGS
+Optional value
+
+One `KEY=VALUE` per line, each passed to `docker buildx build` as
+`--build-arg` — e.g. `VERSION=v1.2.3` to bake a release tag into the binary
+via `-ldflags`. Ignored when `MODE` is `promote`.
+
 ### MODE
 Optional value
 
